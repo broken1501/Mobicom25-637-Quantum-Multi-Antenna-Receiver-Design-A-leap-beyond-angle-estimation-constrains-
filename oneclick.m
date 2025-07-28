@@ -1,6 +1,6 @@
 %% basic setting
 clear all;clc;
- 
+
 theta=linspace(-pi/2,pi/2,100000);
 fs = 5e4;
 ts = 1/fs;
@@ -14,13 +14,13 @@ d_lamda=d./lamda;
 path = '.\data\';
 namelist = dir([path,'*.txt']);
 l = length(namelist);
-P = cell(1,l);%定义一个细胞数组，用于存放所有txt文件
+P = cell(1,l);
 filename=cell(1,l);
 data=cell(2,l);
 h1_data=cell(1,l);
 h2_data=cell(1,l);
 antenna_num=l+1;
-%% 数据对齐 截断
+%% Data alignment
 
 for i = 1:l
     filename{1,i} = [path,namelist(i).name];
@@ -62,7 +62,7 @@ for i=1:l
 end
 total_time=t(length(t)-1);
 
-%% 提取相位
+%% Phase Offset Cancellation
 phase1=cell(1:l);
 phase2=cell(1:l);
 phase_diff=cell(1:l);
@@ -72,11 +72,11 @@ for i=1:l
     phase_diff{1,i}=mod(phase2{1,i}-phase1{1,i}+pi,2*pi)-pi;
 end
 
-m_phase1=zeros(1,length(phase_diff{1,1}(1,:)));%以第一根天线为相位零点
+m_phase1=zeros(1,length(phase_diff{1,1}(1,:)));%Using the first laser as a reference
 
 start_data=zeros(l);
 for i=1:l
-    start_data(i)=mean(phase_diff{1,i}(2*length(t)/total_time:5*length(t)/total_time));%%起点校准为相位差零点
+    start_data(i)=mean(phase_diff{1,i}(2*length(t)/total_time:5*length(t)/total_time));
     phase_diff{1,i}=phase_diff{1,i}-start_data(i);
 end
 
@@ -87,7 +87,7 @@ phase_diff{1,4}=phase_diff{1,4}*(-1);
 phase_diff{1,5}=(phase_diff{1,5})*(-1)-2*pi;
 
 
-%% 角度谱 5频点
+%% Beamforming with ratio beam
 freq=[3.0603*10^9,6.099*10^9,9.2243*10^9,11.6223*10^9,14.9313*10^9];
 lamda=3*10^8./freq;
 d=0.05;
@@ -117,7 +117,7 @@ for k=fix(time*length(t)/total_time)
     for i=round(antenna_num/2)+1:antenna_num
         eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
     end
-    w_add=exp(1i.*w_0');
+    w_add=exp(1i.*w_0');                     
     w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
   
     p_add =zeros(1,length(theta));
@@ -127,9 +127,9 @@ for k=fix(time*length(t)/total_time)
     for  j=1:length(theta)
         a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
         a=[1,a_0']';
-        plus_add=w_add'*a;
-        plus_sub=w_sub'*a;
-        p(1,j)=plus_add/plus_sub;
+        plus_add=w_add'*a;                   %sum beam
+        plus_sub=w_sub'*a;                   %difference beam
+        p(1,j)=plus_add/plus_sub;            %ratio beam
     end
     figure;
     [max_data,num]=max(p_add);
