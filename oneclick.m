@@ -1,0 +1,566 @@
+%% basic setting
+clear all;clc;
+ 
+theta=linspace(-pi/2,pi/2,100000);
+fs = 5e4;
+ts = 1/fs;
+
+freq=[3.0603*10^9,6.099*10^9,9.2243*10^9,11.6223*10^9,14.9313*10^9];
+lamda=3*10^8./freq;
+d=0.05;
+d_lamda=d./lamda;
+%% Data Reading
+
+path = '.\data\';
+namelist = dir([path,'*.txt']);
+l = length(namelist);
+P = cell(1,l);%定义一个细胞数组，用于存放所有txt文件
+filename=cell(1,l);
+data=cell(2,l);
+h1_data=cell(1,l);
+h2_data=cell(1,l);
+antenna_num=l+1;
+%% 数据对齐 截断
+
+for i = 1:l
+    filename{1,i} = [path,namelist(i).name];
+    P{1,i} = load(filename{i});
+    h1_data{1,i}=P{1,i}(1:length(P{1,i}),1);
+    h2_data{1,i}=P{1,i}(1:length(P{1,i}),2);
+end
+min_length=length(P{1,1});
+for i = 2:l
+    file_length = length(P{1,i});
+    if file_length < min_length
+        min_length = file_length;
+    end
+end
+for i=1:l
+    h1_data{1,i}=h1_data{1,i}(1:min_length);
+    h2_data{1,i}=h2_data{1,i}(1:min_length);   
+end
+
+
+%% Data Preprocessing using IQ down-convertion
+h1_data_uni=cell(1,l);
+h2_data_uni=cell(1,l);
+final_data_h1=cell(1,l);
+final_data_h2=cell(1,l);
+f_dif = 999.99866; 
+t = linspace(0,min_length/fs,min_length);
+y = exp(1j*2*pi*f_dif*t);
+fil = fir1(500,0.02);
+for i=1:l
+    h1_data_uni{1,i} = h1_data{1,i} - mean(h1_data{1,i});
+    h2_data_uni{1,i} = h2_data{1,i} - mean(h2_data{1,i});
+    
+    final_data_h1{1,i} = h1_data_uni{1,i}'./y;
+    final_data_h2{1,i} = h2_data_uni{1,i}'./y;
+
+    final_data_h1{1,i} = filtfilt(fil,1,final_data_h1{1,i});
+    final_data_h2{1,i} = filtfilt(fil,1,final_data_h2{1,i});
+end
+total_time=t(length(t)-1);
+
+%% 提取相位
+phase1=cell(1:l);
+phase2=cell(1:l);
+phase_diff=cell(1:l);
+for i=1:l
+    phase1{1,i}=angle(final_data_h1{1,i});
+    phase2{1,i}=angle(final_data_h2{1,i});
+    phase_diff{1,i}=mod(phase2{1,i}-phase1{1,i}+pi,2*pi)-pi;
+end
+
+m_phase1=zeros(1,length(phase_diff{1,1}(1,:)));%以第一根天线为相位零点
+
+start_data=zeros(l);
+for i=1:l
+    start_data(i)=mean(phase_diff{1,i}(2*length(t)/total_time:5*length(t)/total_time));%%起点校准为相位差零点
+    phase_diff{1,i}=phase_diff{1,i}-start_data(i);
+end
+
+phase_diff{1,1}=(phase_diff{1,1})*(-1);
+phase_diff{1,2}=(phase_diff{1,2})*(-1);
+phase_diff{1,3}=(phase_diff{1,3})*(-1);
+phase_diff{1,4}=phase_diff{1,4}*(-1);
+phase_diff{1,5}=(phase_diff{1,5})*(-1)-2*pi;
+
+
+%% 角度谱 5频点
+freq=[3.0603*10^9,6.099*10^9,9.2243*10^9,11.6223*10^9,14.9313*10^9];
+lamda=3*10^8./freq;
+d=0.05;
+d_lamda=d./lamda;
+for i = 2:antenna_num
+    eval(['m_phase',num2str(i),'=','phase_diff{1,i-1}',';']);
+end
+
+
+time=1.1;
+theta_truth=0;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+    figure;
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,1)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1;
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：0°',max_angle));
+ 
+end
+
+time=27.5;
+theta_truth=10;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,2)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1; 
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：10°',max_angle));
+ 
+end
+%
+time=43.4;%
+theta_truth=20;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+    
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,3)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1; %
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：20°',max_angle));
+ 
+end
+%
+time=61.73;
+theta_truth=30;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+   
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,4)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1;
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：30°',max_angle));
+ 
+end
+%
+time=78.4;
+theta_truth=40;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+  
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,5)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1; 
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：40°',max_angle));
+end
+%
+time=94.6;
+theta_truth=50;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+  
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,6)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1;
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：50°',max_angle));
+ 
+end
+%
+time=112;
+theta_truth=60;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+    
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,7)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth);
+    r = 1; 
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：60°',max_angle));
+ 
+end
+
+time=125.4;
+theta_truth=70;
+final_angle=[];
+final_angle_p=[];
+for k=fix(time*length(t)/total_time)
+    
+    w_0=[];
+    w_1=[];
+    w_2=[];
+    for i=1:antenna_num
+        eval(['w_0','=[','w_0',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=1:round(antenna_num/2)
+        eval(['w_1','=[','w_1',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+
+    for i=round(antenna_num/2)+1:antenna_num
+        eval(['w_2','=[','w_2',',','m_phase',num2str(i),'(1,k)',']',';']);
+    end
+    w_add=exp(1i.*w_0');
+    w_sub=[exp(1i.*w_1')',-exp(1i.*w_2')']';
+  
+    p_add =zeros(1,length(theta));
+    p_sub=zeros(1,length(theta),1);
+    p=zeros(1,length(theta),1);
+
+    for  j=1:length(theta)
+        a_0=exp(1i*2*pi*sin(theta(j)).*d_lamda');
+        a=[1,a_0']';
+        plus_add=w_add'*a;
+        plus_sub=w_sub'*a;
+        p(1,j)=plus_add/plus_sub;
+    end
+    
+    [max_data,num]=max(p_add);
+    [max_data_p,num_p]=max(p);
+    max_angle=rad2deg(theta(1,num));
+    final_angle=[final_angle,max_angle];
+    normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
+    subplot(2,4,8)
+    polarplot(theta,normalized_data,'LineWidth', 2);
+    pax = gca;
+    pax.ThetaZeroLocation = 'top';  
+    thetalim([-90 90])
+    hold on;
+    theta_add = deg2rad(theta_truth); 
+    r = 1; 
+    polarplot(theta_add, r, 'ro', 'MarkerSize', 5, 'LineWidth', 2);
+    ax = gca;
+    ax.RTick = [];    
+    ax.RAxis.Visible = 'off';  
+   
+    hold on;
+    legend('Measured AoA','Ground truth');
+    title(sprintf('AoA：70°',max_angle));
+ 
+end
