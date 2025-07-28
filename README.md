@@ -114,4 +114,4 @@ Vision HDL Toolbox                                    version 2.7              (
 WLAN Toolbox                                          version 3.6              (R2023a)\
 Wavelet Toolbox                                       version 6.3              (R2023a)\
 Wireless HDL Toolbox                                  version 2.6              (R2023a)\
-Wireless Testbench                                    version 1.2              (R2023a)\
+Wireless Testbench                                    version 1.2              (R2023a)
