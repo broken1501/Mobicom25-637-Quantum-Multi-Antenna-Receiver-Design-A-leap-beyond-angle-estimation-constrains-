@@ -1,5 +1,5 @@
-# Mobicom25-637-Quantum-Multi-Antenna-Receiver-Design-A-leap-beyond-angle-estimation-constrains-
-Artifact 
+# Mobicom25-637-Artifact-Quantum-Multi-Antenna-Receiver-Design-A-leap-beyond-angle-estimation-constrains-
+
 Our code is developed based on MATLAB, version R2023a.\
 You can run the artifact we submitted by simply clicking the Run button in MATLAB.\
 The following MATLAB toolboxes and software versions are required to run the code.\
