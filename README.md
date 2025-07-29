@@ -1,4 +1,4 @@
-# Mobicom25-637-Artifact-Quantum-Multi-Antenna-Receiver-Design-A-leap-beyond-angle-estimation-constrains-
+# Mobicom25-637-Artifact-README
 
 Our code is developed based on MATLAB, version R2023a.\
 
