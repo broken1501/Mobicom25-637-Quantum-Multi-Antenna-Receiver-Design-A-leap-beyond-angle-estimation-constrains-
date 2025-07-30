@@ -132,8 +132,7 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;            %ratio beam
     end
     figure;
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -149,9 +148,9 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：0°',max_angle));
+    error_0=abs(max_angle);
+    title(sprintf('AoA groudtruth：0°,AoA error:%.2f°',abs(max_angle)));
  
 end
 
@@ -189,8 +188,8 @@ for k=fix(time*length(t)/total_time)
         plus_sub=w_sub'*a;
         p(1,j)=plus_add/plus_sub;
     end
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+  
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -206,13 +205,13 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_1=abs(max_angle-10);
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：10°',max_angle));
+    title(sprintf('AoA groudtruth：10°,AoA error:%.2f°',abs(max_angle-10)));
  
 end
 %
-time=43.4;%
+time=43;%
 theta_truth=20;
 final_angle=[];
 final_angle_p=[];
@@ -247,8 +246,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
     
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+   
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -264,10 +263,10 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_2=abs(max_angle-20);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：20°',max_angle));
+    title(sprintf('AoA groudtruth：20°,AoA error:%.2f°',abs(max_angle-20)));
  
 end
 %
@@ -306,8 +305,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
    
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+ 
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -323,10 +322,10 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_3=abs(max_angle-30);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：30°',max_angle));
+    title(sprintf('AoA groudtruth：30°,AoA error:%.2f°',abs(max_angle-30)));
  
 end
 %
@@ -365,8 +364,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
   
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+   
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -382,10 +381,10 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_4=abs(max_angle-40);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：40°',max_angle));
+    title(sprintf('AoA groudtruth：40°,AoA error:%.2f°',abs(max_angle-40)));
 end
 %
 time=94.6;
@@ -423,8 +422,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
   
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+   
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -440,10 +439,10 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_5=abs(max_angle-50);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：50°',max_angle));
+    title(sprintf('AoA groudtruth：50°,AoA error:%.2f°',abs(max_angle-50)));
  
 end
 %
@@ -482,8 +481,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
     
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+    
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -499,10 +498,10 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_6=abs(max_angle-60);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：60°',max_angle));
+    title(sprintf('AoA groudtruth：60°,AoA error:%.2f°',abs(max_angle-60)));
  
 end
 
@@ -541,8 +540,8 @@ for k=fix(time*length(t)/total_time)
         p(1,j)=plus_add/plus_sub;
     end
     
-    [max_data,num]=max(p_add);
-    [max_data_p,num_p]=max(p);
+    [max_data,num]=max(p);
+   
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
@@ -558,9 +557,13 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-   
+    error_7=abs(max_angle-70);
     hold on;
     legend('Measured AoA','Ground truth');
-    title(sprintf('AoA：70°',max_angle));
+    title(sprintf('AoA groudtruth：70°,AoA error:%.2f°',abs(max_angle-70)));
  
 end
+
+%
+vars=[error_0,error_1,error_2,error_3,error_4,error_5,error_6,error_7]
+MAE=mean(vars)
