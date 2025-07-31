@@ -131,12 +131,16 @@ for k=fix(time*length(t)/total_time)
         plus_sub=w_sub'*a;                   %difference beam
         p(1,j)=plus_add/plus_sub;            %ratio beam
     end
-    figure;
+    % 在所有子图代码之前，创建2×4布局，设置间距
+    figure('Position', [200 200 2000 600]);  % 适当加大图窗宽度，避免子图拥挤
+   
+    tl = tiledlayout(2, 4, 'TileSpacing', 'tight','Padding', 'compact');  % 子图间距：紧凑（比'compact'更密）
+    
     [max_data,num]=max(p);
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,1)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -148,13 +152,14 @@ for k=fix(time*length(t)/total_time)
     ax = gca;
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
-    legend('Measured AoA','Ground truth');
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');  
+    
     error_0=abs(max_angle);
-    title(sprintf('AoA groudtruth：0°,AoA error:%.2f°',abs(max_angle)));
+    title(sprintf('AoA groudtruth：0°,AoA error:%.2f°',abs(max_angle)),'FontSize',14);
  
 end
-
-time=27.5;
+%
+time=27.63;
 theta_truth=10;
 final_angle=[];
 final_angle_p=[];
@@ -193,7 +198,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,2)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -206,12 +211,12 @@ for k=fix(time*length(t)/total_time)
     ax.RTick = [];    
     ax.RAxis.Visible = 'off';  
     error_1=abs(max_angle-10);
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：10°,AoA error:%.2f°',abs(max_angle-10)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');  
+    title(sprintf('AoA groudtruth：10°,AoA error:%.2f°',abs(max_angle-10)),'FontSize',14);
  
 end
 %
-time=43;%
+time=43.5;%
 theta_truth=20;
 final_angle=[];
 final_angle_p=[];
@@ -251,7 +256,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,3)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -265,8 +270,8 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_2=abs(max_angle-20);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：20°,AoA error:%.2f°',abs(max_angle-20)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：20°,AoA error:%.2f°',abs(max_angle-20)),'FontSize',14);
  
 end
 %
@@ -310,7 +315,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,4)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -324,12 +329,12 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_3=abs(max_angle-30);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：30°,AoA error:%.2f°',abs(max_angle-30)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：30°,AoA error:%.2f°',abs(max_angle-30)),'FontSize',14);
  
 end
 %
-time=78.4;
+time=77.92;
 theta_truth=40;
 final_angle=[];
 final_angle_p=[];
@@ -369,7 +374,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,5)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -383,11 +388,11 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_4=abs(max_angle-40);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：40°,AoA error:%.2f°',abs(max_angle-40)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：40°,AoA error:%.2f°',abs(max_angle-40)),'FontSize',14);
 end
 %
-time=94.6;
+time=93.91;
 theta_truth=50;
 final_angle=[];
 final_angle_p=[];
@@ -427,7 +432,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,6)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -441,12 +446,12 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_5=abs(max_angle-50);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：50°,AoA error:%.2f°',abs(max_angle-50)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：50°,AoA error:%.2f°',abs(max_angle-50)),'FontSize',14);
  
 end
 %
-time=112;
+time=113.511;
 theta_truth=60;
 final_angle=[];
 final_angle_p=[];
@@ -486,7 +491,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,7)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -500,12 +505,12 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_6=abs(max_angle-60);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：60°,AoA error:%.2f°',abs(max_angle-60)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：60°,AoA error:%.2f°',abs(max_angle-60)),'FontSize',14);
  
 end
-
-time=125.4;
+%
+time=125.38;
 theta_truth=70;
 final_angle=[];
 final_angle_p=[];
@@ -545,7 +550,7 @@ for k=fix(time*length(t)/total_time)
     max_angle=rad2deg(theta(1,num));
     final_angle=[final_angle,max_angle];
     normalized_data = (abs(p) - min(abs(p)) )/ ((max(abs(p)) - min(abs(p))));
-    subplot(2,4,8)
+    nexttile
     polarplot(theta,normalized_data,'LineWidth', 2);
     pax = gca;
     pax.ThetaZeroLocation = 'top';  
@@ -559,8 +564,8 @@ for k=fix(time*length(t)/total_time)
     ax.RAxis.Visible = 'off';  
     error_7=abs(max_angle-70);
     hold on;
-    legend('Measured AoA','Ground truth');
-    title(sprintf('AoA groudtruth：70°,AoA error:%.2f°',abs(max_angle-70)));
+    legend('Measured AoA','Ground truth','FontSize',14,'NumColumns', 2,'Location', 'southoutside');
+    title(sprintf('AoA groudtruth：70°,AoA error:%.2f°',abs(max_angle-70)),'FontSize',14);
  
 end
 
